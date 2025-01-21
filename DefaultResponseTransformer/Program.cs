@@ -1,5 +1,4 @@
 using System.Net.Mime;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi.Models;
 
@@ -51,10 +50,12 @@ internal static class OpenApiOptionsExtensions
 
 internal class DefaultResponseDocumentTransformer : IOpenApiDocumentTransformer
 {
+    public const string DefaultResponseSchemaId = "DefaultResponse";
+
     public Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
     {
         document.Components ??= new();
-        document.Components.Schemas.TryAdd(nameof(ProblemDetails), new OpenApiSchema
+        document.Components.Schemas.TryAdd(DefaultResponseSchemaId, new OpenApiSchema
         {
             Type = "object",
             Properties = new Dictionary<string, OpenApiSchema>
@@ -106,7 +107,7 @@ internal class DefaultResponseOperationTransformer : IOpenApiOperationTransforme
                     Reference = new OpenApiReference()
                     {
                         Type = ReferenceType.Schema,
-                        Id = nameof(ProblemDetails)
+                        Id = DefaultResponseDocumentTransformer.DefaultResponseSchemaId
                     }
                 }
             }
