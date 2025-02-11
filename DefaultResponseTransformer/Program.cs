@@ -47,6 +47,10 @@ internal static class OpenApiOptionsExtensions
 
         return options;
     }
+
+    [Obsolete("Use AddDefaultProblemDetailsResponse instead.")]
+    public static OpenApiOptions AddDefaultResponse(this OpenApiOptions options)
+        => options.AddDefaultProblemDetailsResponse();
 }
 
 internal class DefaultResponseDocumentTransformer : IOpenApiDocumentTransformer
@@ -63,6 +67,7 @@ internal class DefaultResponseDocumentTransformer : IOpenApiDocumentTransformer
             return Task.CompletedTask;
         }
 
+        // Otherwise, define the ProblemDetails schema in the document.
         document.Components ??= new();
         document.Components.Schemas.TryAdd(nameof(ProblemDetails), new OpenApiSchema
         {
