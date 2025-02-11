@@ -1,4 +1,5 @@
 using System.Net.Mime;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi.Models;
 
@@ -50,12 +51,20 @@ internal static class OpenApiOptionsExtensions
 
 internal class DefaultResponseDocumentTransformer : IOpenApiDocumentTransformer
 {
-    public const string DefaultResponseSchemaId = "DefaultResponse";
-
     public Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
     {
+        // Checks if the ProblemDetails type is already defined in the document (because there is at least one endpoint that returns it).
+        var isProblemDetailsSchemaDefined = context.DescriptionGroups
+           .SelectMany(g => g.Items).SelectMany(i => i.SupportedResponseTypes)
+           .Any(type => type.Type == typeof(ProblemDetails));
+
+        if (isProblemDetailsSchemaDefined)
+        {
+            return Task.CompletedTask;
+        }
+
         document.Components ??= new();
-        document.Components.Schemas.TryAdd(DefaultResponseSchemaId, new OpenApiSchema
+        document.Components.Schemas.TryAdd(nameof(ProblemDetails), new OpenApiSchema
         {
             Type = "object",
             Properties = new Dictionary<string, OpenApiSchema>
@@ -107,7 +116,7 @@ internal class DefaultResponseOperationTransformer : IOpenApiOperationTransforme
                     Reference = new OpenApiReference()
                     {
                         Type = ReferenceType.Schema,
-                        Id = DefaultResponseDocumentTransformer.DefaultResponseSchemaId
+                        Id = nameof(ProblemDetails)
                     }
                 }
             }
